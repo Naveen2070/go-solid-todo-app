@@ -1,64 +1,85 @@
 package todoservices
 
 import (
+	"context"
 	"errors"
+	"time"
 
 	"github.com/Naveen2070/go-rest-api/todo/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var todos []models.Todo
-
-// Add a new todo
-func AddTodo(todo models.Todo) []models.Todo {
-	todo.Id = len(todos) + 1
-	todos = append(todos, todo)
-	return todos
+// Add a new todo to the MongoDB collection
+func AddTodo(collection *mongo.Collection, todo models.Todo) error {
+	// Assign a new ID (you can use an auto-increment strategy if required)
+	todo.Id = int(time.Now().Unix()) // For simplicity, use the Unix timestamp as the ID
+	_, err := collection.InsertOne(context.TODO(), todo)
+	return err
 }
 
-// Get all todos
-func GetTodos() []models.Todo {
-	return todos
-}
+// Get all todos from the MongoDB collection
+func GetTodos(collection *mongo.Collection) ([]models.Todo, error) {
+	var todos []models.Todo
 
-// Get a todo by ID
-func GetTodoById(id int) (models.Todo, error) {
-	for _, t := range todos {
-		if t.Id == id {
-			return t, nil
-		}
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		return nil, err
 	}
-	return models.Todo{}, errors.New("Todo not found")
+	defer cursor.Close(context.TODO())
+
+	if err := cursor.All(context.TODO(), &todos); err != nil {
+		return nil, err
+	}
+
+	return todos, nil
 }
 
-// Update a todo body
-func UpdateTodoBody(id int, body string) ([]models.Todo, error) {
-	for i, t := range todos {
-		if t.Id == id {
-			todos[i].Body = body
-			return todos, nil
-		}
+// Get a todo by ID from the MongoDB collection
+func GetTodoById(collection *mongo.Collection, id int) (models.Todo, error) {
+	var todo models.Todo
+
+	err := collection.FindOne(context.TODO(), bson.M{"id": id}).Decode(&todo)
+	if err == mongo.ErrNoDocuments {
+		return models.Todo{}, errors.New("todo not found")
 	}
-	return nil, errors.New("Todo not found")
+
+	return todo, err
 }
 
-// Update a todo status to completed
-func MarkTodoComplete(id int) ([]models.Todo, error) {
-	for i, t := range todos {
-		if t.Id == id {
-			todos[i].IsCompleted = true
-			return todos, nil
-		}
+// Update a todo body in the MongoDB collection
+func UpdateTodoBody(collection *mongo.Collection, id int, body string) error {
+	filter := bson.M{"id": id}
+	update := bson.M{"$set": bson.M{"body": body}}
+
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err == mongo.ErrNoDocuments {
+		return errors.New("todo not found")
 	}
-	return nil, errors.New("Todo not found")
+
+	return err
 }
 
-// Delete a todo
-func DeleteTodoById(id int) ([]models.Todo, error) {
-	for i, t := range todos {
-		if t.Id == id {
-			todos = append(todos[:i], todos[i+1:]...)
-			return todos, nil
-		}
+// Mark a todo as complete in the MongoDB collection
+func MarkTodoComplete(collection *mongo.Collection, id int) error {
+	filter := bson.M{"id": id}
+	update := bson.M{"$set": bson.M{"isCompleted": true}}
+
+	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	if err == mongo.ErrNoDocuments {
+		return errors.New("todo not found")
 	}
-	return nil, errors.New("Todo not found")
+
+	return err
+}
+
+// Delete a todo by ID from the MongoDB collection
+func DeleteTodoById(collection *mongo.Collection, id int) error {
+	filter := bson.M{"id": id}
+	_, err := collection.DeleteOne(context.TODO(), filter)
+	if err == mongo.ErrNoDocuments {
+		return errors.New("todo not found")
+	}
+
+	return err
 }

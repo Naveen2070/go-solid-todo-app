@@ -6,6 +6,7 @@ import (
 	"github.com/Naveen2070/go-rest-api/todo/models"
 	todoservices "github.com/Naveen2070/go-rest-api/todo/services"
 	"github.com/gofiber/fiber/v2"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func HelloWorld(c *fiber.Ctx) error {
@@ -14,7 +15,7 @@ func HelloWorld(c *fiber.Ctx) error {
 	})
 }
 
-func AddTodoHandler(c *fiber.Ctx) error {
+func AddTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	var todo models.Todo
 
 	if err := c.BodyParser(&todo); err != nil {
@@ -23,18 +24,31 @@ func AddTodoHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	if todo.Body == "" {
-		return c.Status(400).JSON(fiber.Map{
-			"message": "Todo body cannot be empty",
+	err := todoservices.AddTodo(collection, todo)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"message": "Failed to add todo",
 		})
 	}
 
-	todos := todoservices.AddTodo(todo)
-	return c.Status(201).JSON(todos)
+	return c.Status(201).JSON(fiber.Map{
+		"message": "Todo added successfully",
+	})
 }
 
-func GetTodosHandler(c *fiber.Ctx) error {
-	todos := todoservices.GetTodos()
+func GetTodosHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+	todos, err := todoservices.GetTodos(collection)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"message": "Failed to get todos",
+		})
+	}
+	if len(todos) == 0 {
+		return c.Status(404).JSON(fiber.Map{
+			"message": "No todos found",
+		})
+	}
+
 	return c.Status(200).JSON(todos)
 }
 
