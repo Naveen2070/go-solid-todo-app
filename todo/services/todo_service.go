@@ -48,38 +48,66 @@ func GetTodoById(collection *mongo.Collection, id int) (models.Todo, error) {
 }
 
 // Update a todo body in the MongoDB collection
-func UpdateTodoBody(collection *mongo.Collection, id int, body string) error {
+func UpdateTodoBody(collection *mongo.Collection, id int, body string) (models.Todo, error) {
 	filter := bson.M{"id": id}
 	update := bson.M{"$set": bson.M{"body": body}}
 
-	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	var todos []models.Todo
+
+	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err == mongo.ErrNoDocuments {
-		return errors.New("todo not found")
+		return models.Todo{}, errors.New("todo not found")
 	}
 
-	return err
+	err = collection.FindOne(context.TODO(), filter).Decode(&todos)
+
+	if result.MatchedCount == 0 {
+		return models.Todo{}, errors.New("todo not found")
+	}
+
+	return todos[0], err
 }
 
 // Mark a todo as complete in the MongoDB collection
-func MarkTodoComplete(collection *mongo.Collection, id int) error {
+func MarkTodoComplete(collection *mongo.Collection, id int) (models.Todo, error) {
 	filter := bson.M{"id": id}
 	update := bson.M{"$set": bson.M{"isCompleted": true}}
 
-	_, err := collection.UpdateOne(context.TODO(), filter, update)
+	var todos []models.Todo
+
+	result, err := collection.UpdateOne(context.TODO(), filter, update)
 	if err == mongo.ErrNoDocuments {
-		return errors.New("todo not found")
+		return models.Todo{}, errors.New("todo not found")
 	}
 
-	return err
+	err = collection.FindOne(context.TODO(), filter).Decode(&todos)
+
+	if result.MatchedCount == 0 {
+		return models.Todo{}, errors.New("todo not found")
+	}
+
+	return todos[0], err
 }
 
 // Delete a todo by ID from the MongoDB collection
-func DeleteTodoById(collection *mongo.Collection, id int) error {
+func DeleteTodoById(collection *mongo.Collection, id int) (models.Todo, error) {
 	filter := bson.M{"id": id}
-	_, err := collection.DeleteOne(context.TODO(), filter)
+	var todos []models.Todo
+
+	err := collection.FindOne(context.TODO(), filter).Decode(&todos)
+
 	if err == mongo.ErrNoDocuments {
-		return errors.New("todo not found")
+		return models.Todo{}, errors.New("todo not found")
 	}
 
-	return err
+	result, err := collection.DeleteOne(context.TODO(), filter)
+	if err == mongo.ErrNoDocuments {
+		return models.Todo{}, errors.New("todo not found")
+	}
+
+	if result.DeletedCount == 0 {
+		return models.Todo{}, errors.New("todo not found")
+	}
+
+	return todos[0], err
 }

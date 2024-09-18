@@ -52,7 +52,7 @@ func GetTodosHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	return c.Status(200).JSON(todos)
 }
 
-func GetTodoByIdHandler(c *fiber.Ctx) error {
+func GetTodoByIdHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -60,7 +60,7 @@ func GetTodoByIdHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	todo, err := todoservices.GetTodoById(id)
+	todo, err := todoservices.GetTodoById(collection, id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
@@ -70,7 +70,7 @@ func GetTodoByIdHandler(c *fiber.Ctx) error {
 	return c.Status(200).JSON(todo)
 }
 
-func UpdateTodoHandler(c *fiber.Ctx) error {
+func UpdateTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -85,7 +85,7 @@ func UpdateTodoHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	todos, err := todoservices.UpdateTodoBody(id, todo.Body)
+	todos, err := todoservices.UpdateTodoBody(collection, id, todo.Body)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
@@ -95,7 +95,7 @@ func UpdateTodoHandler(c *fiber.Ctx) error {
 	return c.Status(200).JSON(todos)
 }
 
-func MarkTodoCompleteHandler(c *fiber.Ctx) error {
+func MarkTodoCompleteHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -103,7 +103,7 @@ func MarkTodoCompleteHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	todos, err := todoservices.MarkTodoComplete(id)
+	todos, err := todoservices.MarkTodoComplete(collection, id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
@@ -113,7 +113,7 @@ func MarkTodoCompleteHandler(c *fiber.Ctx) error {
 	return c.Status(200).JSON(todos)
 }
 
-func DeleteTodoHandler(c *fiber.Ctx) error {
+func DeleteTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -121,7 +121,7 @@ func DeleteTodoHandler(c *fiber.Ctx) error {
 		})
 	}
 
-	todos, err := todoservices.DeleteTodoById(id)
+	todos, err := todoservices.DeleteTodoById(collection, id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
