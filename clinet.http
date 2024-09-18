@@ -1,0 +1,29 @@
+### Root route
+GET http://localhost:3003/
+
+### Get all todos
+GET http://localhost:3003/api/todos
+
+### Get a single todo
+GET http://localhost:3003/api/todos/1
+
+### Create a new todo
+POST http://localhost:3003/api/add-todos
+Accept: application/json
+Content-Type: application/json
+
+{
+    "body": "Buy milk"
+}
+
+### Update a todo
+PUT http://localhost:3003/api/update-todos/1
+Accept: application/json
+Content-Type: application/json
+
+{
+    "body": "Buy milk and eggs"
+}
+
+### Delete a todo
+DELETE http://localhost:3003/api/delete-todos/2
