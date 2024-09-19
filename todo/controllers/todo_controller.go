@@ -6,16 +6,17 @@ import (
 	"github.com/Naveen2070/go-rest-api/todo/models"
 	todoservices "github.com/Naveen2070/go-rest-api/todo/services"
 	"github.com/gofiber/fiber/v2"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// HelloWorld controller
 func HelloWorld(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"message": "Hello, World!",
 	})
 }
 
-func AddTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// AddTodoHandler handles adding a new todo to the collection (supports MongoDB and GORM)
+func AddTodoHandler(c *fiber.Ctx, collection interface{}) error {
 	var todo models.Todo
 
 	if err := c.BodyParser(&todo); err != nil {
@@ -28,6 +29,7 @@ func AddTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"message": "Failed to add todo",
+			"error":   err.Error(),
 		})
 	}
 
@@ -36,7 +38,8 @@ func AddTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	})
 }
 
-func GetTodosHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// GetTodosHandler handles getting all todos from the collection (supports MongoDB and GORM)
+func GetTodosHandler(c *fiber.Ctx, collection interface{}) error {
 	todos, err := todoservices.GetTodos(collection)
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -52,7 +55,8 @@ func GetTodosHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	return c.Status(200).JSON(todos)
 }
 
-func GetTodoByIdHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// GetTodoByIdHandler handles getting a todo by ID (supports MongoDB and GORM)
+func GetTodoByIdHandler(c *fiber.Ctx, collection interface{}) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -70,7 +74,8 @@ func GetTodoByIdHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 	return c.Status(200).JSON(todo)
 }
 
-func UpdateTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// UpdateTodoHandler handles updating a todo's body (supports MongoDB and GORM)
+func UpdateTodoHandler(c *fiber.Ctx, collection interface{}) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -85,17 +90,18 @@ func UpdateTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 		})
 	}
 
-	todos, err := todoservices.UpdateTodoBody(collection, id, todo.Body)
+	updatedTodo, err := todoservices.UpdateTodoBody(collection, id, todo.Body)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
 		})
 	}
 
-	return c.Status(200).JSON(todos)
+	return c.Status(200).JSON(updatedTodo)
 }
 
-func MarkTodoCompleteHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// MarkTodoCompleteHandler handles marking a todo as complete (supports MongoDB and GORM)
+func MarkTodoCompleteHandler(c *fiber.Ctx, collection interface{}) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -103,17 +109,18 @@ func MarkTodoCompleteHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 		})
 	}
 
-	todos, err := todoservices.MarkTodoComplete(collection, id)
+	updatedTodo, err := todoservices.MarkTodoComplete(collection, id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
 		})
 	}
 
-	return c.Status(200).JSON(todos)
+	return c.Status(200).JSON(updatedTodo)
 }
 
-func DeleteTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
+// DeleteTodoHandler handles deleting a todo by ID (supports MongoDB and GORM)
+func DeleteTodoHandler(c *fiber.Ctx, collection interface{}) error {
 	id, err := strconv.Atoi(c.Params("id"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -121,12 +128,12 @@ func DeleteTodoHandler(c *fiber.Ctx, collection *mongo.Collection) error {
 		})
 	}
 
-	todos, err := todoservices.DeleteTodoById(collection, id)
+	deletedTodo, err := todoservices.DeleteTodoById(collection, id)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{
 			"message": "Todo not found",
 		})
 	}
 
-	return c.Status(200).JSON(todos)
+	return c.Status(200).JSON(deletedTodo)
 }

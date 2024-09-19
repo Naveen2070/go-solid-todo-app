@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -9,7 +10,10 @@ import (
 	todocontrollers "github.com/Naveen2070/go-rest-api/todo/controllers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
+	_ "modernc.org/sqlite"
 )
+
+var sqliteDB *sql.DB
 
 func main() {
 	app := fiber.New()
@@ -20,11 +24,39 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Connect to MongoDB
-	client := dbConnect.ConnectDB()
+	// Get the DB_TYPE from environment variables
+	dbType := os.Getenv("DB_TYPE")
 
-	// Use the client (for example, to interact with a "todos" collection)
-	todoCollection := client.Database("todoApp").Collection("todos")
+	var todoCollection interface{}
+
+	if dbType == "SQLITE" {
+		// Initialize SQLite
+		sqliteDB, err = sql.Open("sqlite", "todos.db")
+		if err != nil {
+			log.Fatal("Failed to connect to SQLite:", err)
+		}
+
+		// Auto-migrate your models (Todo) - You need to manually create the table
+		_, err = sqliteDB.Exec(`CREATE TABLE IF NOT EXISTS todos (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			body TEXT NOT NULL,
+			is_completed BOOLEAN NOT NULL DEFAULT FALSE
+		)`)
+		if err != nil {
+			log.Fatal("Failed to create tables:", err)
+		}
+
+		todoCollection = sqliteDB
+		fmt.Println("Using SQLite")
+	} else if dbType == "MONGO" {
+		// Initialize MongoDB connection
+		client := dbConnect.ConnectDB()
+		defer dbConnect.DisconnectDB(client)
+		todoCollection = client.Database("todoApp").Collection("todos")
+		fmt.Println("Using MongoDB")
+	} else {
+		log.Fatal("Unsupported DB_TYPE. Must be either 'SQLITE' or 'MONGO'.")
+	}
 
 	// Get the PORT from the environment
 	PORT := os.Getenv("PORT")
@@ -32,7 +64,7 @@ func main() {
 		PORT = "3000"
 	}
 
-	// Define routes, passing the collection to each controller handler
+	// Define routes
 	app.Get("/", todocontrollers.HelloWorld)
 	app.Post("/api/add-todos", func(c *fiber.Ctx) error {
 		return todocontrollers.AddTodoHandler(c, todoCollection)
@@ -53,8 +85,6 @@ func main() {
 		return todocontrollers.DeleteTodoHandler(c, todoCollection)
 	})
 
-	// Gracefully disconnect MongoDB when the app shuts down
-	defer dbConnect.DisconnectDB(client)
-
+	// Start the server
 	log.Fatal(app.Listen(fmt.Sprintf(":%s", PORT)))
 }
