@@ -40,7 +40,7 @@ func main() {
 		_, err = sqliteDB.Exec(`CREATE TABLE IF NOT EXISTS todos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			body TEXT NOT NULL,
-			is_completed BOOLEAN NOT NULL DEFAULT FALSE
+			isCompleted BOOLEAN NOT NULL DEFAULT FALSE
 		)`)
 		if err != nil {
 			log.Fatal("Failed to create tables:", err)
