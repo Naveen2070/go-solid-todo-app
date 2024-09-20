@@ -47,9 +47,7 @@ func GetTodosHandler(c *fiber.Ctx, collection interface{}) error {
 		})
 	}
 	if len(todos) == 0 {
-		return c.Status(404).JSON(fiber.Map{
-			"message": "No todos found",
-		})
+		return c.Status(200).JSON([]models.Todo{})
 	}
 
 	return c.Status(200).JSON(todos)

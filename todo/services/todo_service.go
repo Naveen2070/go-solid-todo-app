@@ -135,7 +135,7 @@ func MarkTodoComplete(collection interface{}, id int) (models.Todo, error) {
 	switch col := collection.(type) {
 	case *mongo.Collection:
 		// MongoDB logic
-		filter := bson.M{"id": id}
+		filter := bson.M{"_id": id}
 		update := bson.M{"$set": bson.M{"isCompleted": true}}
 
 		result, err := col.UpdateOne(context.TODO(), filter, update)
@@ -165,7 +165,7 @@ func DeleteTodoById(collection interface{}, id int) (models.Todo, error) {
 	switch col := collection.(type) {
 	case *mongo.Collection:
 		// MongoDB logic
-		filter := bson.M{"id": id}
+		filter := bson.M{"_id": id}
 		err := col.FindOne(context.TODO(), filter).Decode(&todo)
 		if err == mongo.ErrNoDocuments {
 			return models.Todo{}, errors.New("todo not found")

@@ -27,3 +27,6 @@ Content-Type: application/json
 
 ### Delete a todo
 DELETE http://localhost:3003/api/delete-todos/2
+
+### Mark a todo as complete
+PUT http://localhost:3003/api/todos/1726826251/complete

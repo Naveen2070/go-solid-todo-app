@@ -9,6 +9,7 @@ import (
 	dbConnect "github.com/Naveen2070/go-rest-api/db"
 	todocontrollers "github.com/Naveen2070/go-rest-api/todo/controllers"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	_ "modernc.org/sqlite"
 )
@@ -22,6 +23,20 @@ func main() {
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+
+	// Enable CORS middleware
+	if os.Getenv("ENV") == "development" {
+		fmt.Println("Running in development mode")
+		app.Use(cors.New(cors.Config{
+			AllowOrigins: os.Getenv("CORS_ALLOW_ORIGINS"),
+			AllowHeaders: os.Getenv("CORS_ALLOW_HEADERS"),
+		}))
+	}
+
+	//serve static files
+	if os.Getenv("ENV") == "production" {
+		app.Static("/", "./client/dist")
 	}
 
 	// Get the DB_TYPE from environment variables
