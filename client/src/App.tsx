@@ -36,7 +36,7 @@ const App = () => {
     mutationKey: ['todos-update'],
     mutationFn: async (id: number) => {
       const res = await fetch(`${BASE_URL}/todos/${id}/complete`, {
-        method: 'PUT',
+        method: 'GET',
       });
       if (!res.ok) throw new Error('Failed to update task');
     },
