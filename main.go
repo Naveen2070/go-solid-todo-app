@@ -55,7 +55,7 @@ func main() {
 		_, err = sqliteDB.Exec(`CREATE TABLE IF NOT EXISTS todos (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			body TEXT NOT NULL,
-			isCompleted BOOLEAN NOT NULL DEFAULT FALSE
+			is_completed BOOLEAN NOT NULL DEFAULT FALSE
 		)`)
 		if err != nil {
 			log.Fatal("Failed to create tables:", err)
@@ -93,7 +93,7 @@ func main() {
 	app.Put("/api/update-todos/:id", func(c *fiber.Ctx) error {
 		return todocontrollers.UpdateTodoHandler(c, todoCollection)
 	})
-	app.Put("/api/todos/:id/complete", func(c *fiber.Ctx) error {
+	app.Get("/api/todos/:id/complete", func(c *fiber.Ctx) error {
 		return todocontrollers.MarkTodoCompleteHandler(c, todoCollection)
 	})
 	app.Delete("/api/delete-todos/:id", func(c *fiber.Ctx) error {

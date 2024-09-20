@@ -22,8 +22,11 @@ Accept: application/json
 Content-Type: application/json
 
 {
-    "body": "Buy milk and eggs"
+    "body": "Buy milk and eggs",
 }
+
+### Set a todo as complete
+GET  http://localhost:3003/api/todos/1/complete
 
 ### Delete a todo
 DELETE http://localhost:3003/api/delete-todos/2
